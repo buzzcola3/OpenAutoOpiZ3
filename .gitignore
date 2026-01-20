@@ -1,0 +1,16 @@
+# Buildroot outputs
+buildroot/output/
+
+# Buildroot downloads
+buildroot/dl/
+
+# Buildroot configuration
+buildroot/.config
+buildroot/.config.old
+
+# Host tools/temporary
+buildroot/.stamp*
+
+# Editor/OS
+.vscode/
+.DS_Store

@@ -1,0 +1,4 @@
+config BR2_PACKAGE_OPENAUTOCORE
+	bool "OpenAutoCore (prebuilt)"
+	help
+	  Prebuilt OpenAutoCore binary from GitHub releases.
