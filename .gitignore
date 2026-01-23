@@ -1,4 +1,7 @@
-# Buildroot outputs
+# Buildroot tree (keep a local clone in ./buildroot)
+buildroot/
+
+# Local Buildroot outputs
 buildroot/output/
 
 # Buildroot downloads
