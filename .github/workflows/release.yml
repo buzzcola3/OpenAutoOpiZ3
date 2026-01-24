@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Ensure buildroot directory exists (submodules or fail)
         run: |
@@ -49,7 +51,7 @@ jobs:
             wget
 
       - name: Configure Buildroot
-        run: make -C buildroot BR2_EXTERNAL="${GITHUB_WORKSPACE}/external" openauto_orangepi_zero3_defconfig
+        run: make -C buildroot BR2_EXTERNAL="${{ github.workspace }}/external" openauto_orangepi_zero3_defconfig
 
       - name: Build images
         run: make -C buildroot
