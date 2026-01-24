@@ -1,18 +1,15 @@
-# Buildroot tree (keep a local clone in ./buildroot)
-buildroot/
-
-# Local Buildroot outputs
-buildroot/output/
+# Buildroot outputs
+# buildroot/output/
 
 # Buildroot downloads
-buildroot/dl/
+# buildroot/dl/
 
 # Buildroot configuration
-buildroot/.config
-buildroot/.config.old
+# buildroot/.config
+# buildroot/.config.old
 
 # Host tools/temporary
-buildroot/.stamp*
+# buildroot/.stamp*
 
 # Editor/OS
 .vscode/
