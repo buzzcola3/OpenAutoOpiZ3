@@ -1,5 +1,6 @@
 menu "OpenAuto external options"
 	source "$BR2_EXTERNAL_OPENAUTO_PATH/package/flutter_engine_prebuilt/Config.in"
 	source "$BR2_EXTERNAL_OPENAUTO_PATH/package/flutterpi/Config.in"
+	source "$BR2_EXTERNAL_OPENAUTO_PATH/package/openautoflutter/Config.in"
 	source "$BR2_EXTERNAL_OPENAUTO_PATH/package/openautocore/Config.in"
 endmenu

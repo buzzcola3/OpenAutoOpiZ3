@@ -1,0 +1,19 @@
+[Unit]
+Description=OpenAutoFlutter demo (flutter-pi)
+After=systemd-udevd.service systemd-udev-settle.service
+Wants=systemd-udevd.service systemd-udev-settle.service
+ConditionPathExists=/usr/share/flutter/demo/flutter_assets
+ConditionPathExists=/usr/share/flutter/demo/libapp.so
+
+[Service]
+Type=simple
+WorkingDirectory=/usr/share/flutter/demo
+ExecStartPre=/bin/sh -c 'if command -v psplash-write >/dev/null 2>&1; then psplash-write "QUIT" || true; fi; killall psplash 2>/dev/null || true'
+ExecStartPre=/bin/sh -c 'modprobe panfrost 2>/dev/null || true; modprobe sun4i-drm 2>/dev/null || true; modprobe sun8i-drm 2>/dev/null || true'
+ExecStartPre=/bin/sh -c 'for i in 1 2 3 4 5; do [ -e /dev/dri/card0 ] && exit 0; sleep 1; done; ls -l /dev/dri 2>/dev/null || true; exit 0'
+ExecStart=/usr/bin/flutter-pi --release /usr/share/flutter/demo
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
