@@ -1,7 +1,0 @@
-config BR2_PACKAGE_FLUTTER_ENGINE_PREBUILT
-	bool "Flutter engine (prebuilt, aarch64)"
-	depends on BR2_aarch64
-	depends on BR2_TOOLCHAIN_USES_GLIBC
-	depends on BR2_INSTALL_LIBSTDCPP
-	help
-	  Prebuilt Flutter engine shared library and ICU data.

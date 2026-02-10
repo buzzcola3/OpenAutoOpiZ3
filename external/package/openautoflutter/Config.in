@@ -1,7 +1,0 @@
-config BR2_PACKAGE_OPENAUTOFLUTTER
-	bool "OpenAutoFlutter demo bundle (prebuilt)"
-	depends on BR2_aarch64
-	select BR2_PACKAGE_FLUTTERPI
-	help
-	  Prebuilt OpenAutoFlutter demo bundle (libapp.so + flutter_assets)
-	  installed to /usr/share/flutter/demo for flutter-pi autostart.
