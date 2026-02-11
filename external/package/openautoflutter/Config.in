@@ -1,0 +1,21 @@
+config BR2_PACKAGE_OPENAUTOFLUTTER
+	bool "OpenAutoFlutter (prebuilt flutter-pi bundle)"
+	depends on BR2_aarch64
+	select BR2_PACKAGE_LIBDRM
+	select BR2_PACKAGE_MESA3D
+	select BR2_PACKAGE_LIBINPUT
+	select BR2_PACKAGE_LIBXKBCOMMON
+	select BR2_PACKAGE_FONTCONFIG
+	select BR2_PACKAGE_GSTREAMER1
+	select BR2_PACKAGE_GST1_PLUGINS_BASE
+	select BR2_PACKAGE_LIBGTK3
+	select BR2_PACKAGE_LIBEPOXY
+	select BR2_PACKAGE_FFMPEG
+	select BR2_PACKAGE_HARFBUZZ
+	select BR2_PACKAGE_SYSTEMD
+	select BR2_PACKAGE_VULKAN_LOADER
+	help
+	  Prebuilt OpenAutoFlutter example app for flutter-pi (aarch64).
+	  Installs to /opt/OpenAutoFlutter.
+	  LLVM runtime libs (libc++, libc++abi, libunwind) are provided
+	  via rootfs overlay in /usr/lib.

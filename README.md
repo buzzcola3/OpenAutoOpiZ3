@@ -17,6 +17,52 @@ From the project root:
 
 Build outputs are in `buildroot/output/images`.
 
+## Installed Packages
+
+Packages added on top of the default Buildroot configuration:
+
+| Package | Source | Install path | Description |
+|---|---|---|---|
+| OpenAutoCore | [external](external/package/openautocore/) | `/usr/bin/openautocore` | Core OpenAuto binary (prebuilt) |
+| OpenAutoFlutter | [external](external/package/openautoflutter/) | `/opt/OpenAutoFlutter/` | Prebuilt Flutter UI (flutter-pi bundle, v0.0.15) |
+| LLVM | Buildroot | `/usr/lib/` | Required by Mesa Panfrost gallium driver |
+| Mesa3D (Panfrost) | Buildroot | `/usr/lib/` | GPU drivers — EGL, GLES, GBM, Panfrost + kmsro gallium |
+| Vulkan Loader | Buildroot | `/usr/lib/` | Vulkan ICD loader |
+| libdrm | Buildroot | `/usr/lib/` | Direct Rendering Manager library |
+| libinput | Buildroot | `/usr/lib/` | Input device handling |
+| libxkbcommon | Buildroot | `/usr/lib/` | Keyboard keymap handling |
+| xkeyboard-config | Buildroot | `/usr/share/X11/xkb/` | XKB keyboard layout data |
+| GTK 3 | Buildroot | `/usr/lib/` | Widget toolkit (+ cairo, pango, atk, gdk-pixbuf) |
+| libepoxy | Buildroot | `/usr/lib/` | GL function pointer dispatch |
+| FFmpeg | Buildroot | `/usr/lib/` | libavcodec, libavutil, libswscale |
+| GStreamer 1.x | Buildroot | `/usr/lib/` | Media pipeline framework + base plugins |
+| fontconfig / freetype / harfbuzz | Buildroot | `/usr/lib/` | Font rendering stack |
+| DejaVu fonts | Buildroot | `/usr/share/fonts/` | Default font family |
+| systemd | Buildroot | `/usr/lib/systemd/` | Init system, libudev, libsystemd |
+| psplash | Buildroot | — | Boot splash screen |
+| libc++ / libc++abi / libunwind | Rootfs overlay (LLVM 18, aarch64) | `/usr/lib/` | LLVM C++ runtime (required by OpenAutoFlutter plugin) |
+
+## Usage
+
+OpenAutoFlutter starts automatically via systemd (`openautoflutter.service`). It requires `openautocore` to be running first — it connects via shared memory transport as Side B.
+
+To run manually:
+
+```bash
+# Start OpenAutoCore first (Side A)
+openautocore &
+
+# Then start OpenAutoFlutter
+cd /opt/OpenAutoFlutter && LD_LIBRARY_PATH=/opt/OpenAutoFlutter ./flutter-pi --release /opt/OpenAutoFlutter
+```
+
+If psplash or fbcon is holding the DRM device, release it first:
+
+```bash
+killall psplash 2>/dev/null
+echo 0 > /sys/class/vtconsole/vtcon1/bind 2>/dev/null
+```
+
 ## Debug / Development Notes
 
 > Items in this section are for development convenience and should be reverted before a release build.

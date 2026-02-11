@@ -37,3 +37,9 @@ sed "s/%PARTUUID%/${PARTUUID}/g" "${SCRIPT_DIR}/genimage.cfg" > "${BINARIES_DIR}
 if [ -n "${TARGET_DIR}" ] && [ -d "${TARGET_DIR}/etc/init.d" ]; then
   chmod +x "${TARGET_DIR}/etc/init.d/S01psplash" 2>/dev/null || true
 fi
+
+if grep -Eq "^BR2_INIT_SYSTEMD=y$" "${BR2_CONFIG}"; then
+  install -d "${TARGET_DIR}/etc/systemd/system/multi-user.target.wants"
+  ln -sf /etc/systemd/system/openautoflutter.service \
+    "${TARGET_DIR}/etc/systemd/system/multi-user.target.wants/openautoflutter.service"
+fi
