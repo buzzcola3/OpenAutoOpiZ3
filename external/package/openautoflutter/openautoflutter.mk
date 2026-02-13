@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-OPENAUTOFLUTTER_VERSION = 0.0.15
+OPENAUTOFLUTTER_VERSION = 0.0.20
 OPENAUTOFLUTTER_SOURCE = openautoflutter_example-flutter-pi-arm64.tar.gz
 OPENAUTOFLUTTER_SITE = https://github.com/buzzcola3/OpenAutoFlutter/releases/download/v$(OPENAUTOFLUTTER_VERSION)
 OPENAUTOFLUTTER_SITE_METHOD = wget

@@ -4,6 +4,7 @@ BR2_TOOLCHAIN_BUILDROOT_CXX=y
 BR2_PACKAGE_HOST_LINUX_HEADERS_CUSTOM_6_12=y
 BR2_GLOBAL_PATCH_DIR="../external/board/orangepi/zero3/patches"
 BR2_DOWNLOAD_FORCE_CHECK_HASHES=y
+BR2_CCACHE=y
 BR2_TARGET_GENERIC_ISSUE="Welcome to Orangepi Zero3"
 BR2_ROOTFS_DEVICE_CREATION_DYNAMIC_DEVTMPFS=y
 BR2_SYSTEM_DHCP="eth0"
@@ -23,7 +24,7 @@ BR2_LINUX_KERNEL_USE_ARCH_DEFAULT_CONFIG=y
 BR2_LINUX_KERNEL_DTS_SUPPORT=y
 BR2_LINUX_KERNEL_INTREE_DTS_NAME="allwinner/sun50i-h618-orangepi-zero3"
 BR2_LINUX_KERNEL_DTB_KEEP_DIRNAME=y
-BR2_LINUX_KERNEL_CONFIG_FRAGMENT_FILES="../external/kernel-fragments/psplash_fbdev.fragment ../external/kernel-fragments/hdmi_cma.fragment ../external/kernel-fragments/h618_gpu_power.fragment ../external/kernel-fragments/no_boot_console.fragment"
+BR2_LINUX_KERNEL_CONFIG_FRAGMENT_FILES="../external/kernel-fragments/drm_fbdev.fragment ../external/kernel-fragments/hdmi_cma.fragment ../external/kernel-fragments/h618_gpu_power.fragment ../external/kernel-fragments/no_boot_console.fragment"
 BR2_LINUX_KERNEL_INSTALL_TARGET=y
 BR2_LINUX_KERNEL_NEEDS_HOST_OPENSSL=y
 BR2_TARGET_ROOTFS_EXT2=y
@@ -78,7 +79,4 @@ BR2_PACKAGE_LIBGTK3=y
 BR2_PACKAGE_LIBEPOXY=y
 BR2_PACKAGE_UTIL_LINUX=y
 BR2_PACKAGE_UTIL_LINUX_LIBMOUNT=y
-BR2_PACKAGE_PSPLASH=y
-BR2_PACKAGE_PSPLASH_IMAGE="../external/psplash/splash.png"
-# BR2_PACKAGE_PSPLASH_STARTUP_MSG is not set
-BR2_PACKAGE_PSPLASH_FULL_SCREEN=y
+

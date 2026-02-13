@@ -1,5 +1,5 @@
-# Increase CMA so DRM fbdev emulation can allocate framebuffer for HDMI
+# Increase CMA for DRM/KMS display buffers and GPU rendering
 CONFIG_CMA=y
-CONFIG_CMA_SIZE_MBYTES=128
+CONFIG_CMA_SIZE_MBYTES=256
 CONFIG_CMA_SIZE_SEL_MBYTES=y
 CONFIG_CMA_ALIGNMENT=8
