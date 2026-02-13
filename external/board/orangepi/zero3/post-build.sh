@@ -33,3 +33,10 @@ sed -e "$(generic_getty)" \
   "${SCRIPT_DIR}/extlinux.conf" > "${TARGET_DIR}/boot/extlinux/extlinux.conf"
 
 sed "s/%PARTUUID%/${PARTUUID}/g" "${SCRIPT_DIR}/genimage.cfg" > "${BINARIES_DIR}/genimage.cfg"
+
+# Enable OpenAutoCore and OpenAutoFlutter at boot
+mkdir -p "${TARGET_DIR}/etc/systemd/system/multi-user.target.wants"
+ln -sf /etc/systemd/system/openautocore.service \
+  "${TARGET_DIR}/etc/systemd/system/multi-user.target.wants/openautocore.service"
+ln -sf /etc/systemd/system/openautoflutter.service \
+  "${TARGET_DIR}/etc/systemd/system/multi-user.target.wants/openautoflutter.service"

@@ -1,14 +1,15 @@
 [Unit]
-Description=OpenAutoFlutter (flutter-pi)
-After=multi-user.target
-ConditionPathExists=/opt/OpenAutoFlutter/flutter-pi
+Description=OpenAutoFlutter (flutter-drm)
+After=multi-user.target openautocore.service
+Requires=openautocore.service
+ConditionPathExists=/opt/OpenAutoFlutter/flutter-drm-embedder
 ConditionPathExists=/opt/OpenAutoFlutter/app.so
 
 [Service]
 Type=simple
 WorkingDirectory=/opt/OpenAutoFlutter
 Environment=LD_LIBRARY_PATH=/opt/OpenAutoFlutter
-ExecStart=/opt/OpenAutoFlutter/flutter-pi --release /opt/OpenAutoFlutter
+ExecStart=/opt/OpenAutoFlutter/flutter-drm-embedder --release /opt/OpenAutoFlutter
 Restart=on-failure
 RestartSec=3
 
