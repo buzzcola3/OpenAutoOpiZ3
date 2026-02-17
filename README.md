@@ -90,3 +90,15 @@ The following changes enable maximum kernel logging over UART for debugging:
 1. In `extlinux.conf`, restore `quiet loglevel=3 consoleblank=0 vt.global_cursor_default=0 logo.nologo fbcon=map:0` and remove `earlycon`, `printk.devkmsg=on`, `initcall_debug`, `ignore_loglevel`.
 2. In `no_boot_console.fragment`, restore the console-suppressing options (`CONFIG_VT=n`, `CONFIG_FRAMEBUFFER_CONSOLE=n`, etc.).
 3. In the defconfig, remove `../external/kernel-fragments/no_boot_console.fragment` from the fragment list.
+
+### Full Debug Symbols
+
+The defconfig enables full debug symbols and disables binary stripping so that GDB can be used on-target:
+
+- `BR2_ENABLE_DEBUG=y` — compile all packages with `-g`.
+- `BR2_DEBUG_3=y` — use `-g3` (includes macro definitions).
+- `# BR2_STRIP_strip is not set` — skip stripping, keeping symbols in installed binaries.
+
+A GDB server (`gdbserver`) is also included on the target (`BR2_PACKAGE_GDB_SERVER=y`).
+
+**To revert for release:** remove `BR2_ENABLE_DEBUG=y`, `BR2_DEBUG_3=y`, and `# BR2_STRIP_strip is not set` from the defconfig (default Buildroot behaviour will strip binaries automatically).
