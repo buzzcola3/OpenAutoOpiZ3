@@ -1,0 +1,14 @@
+[Unit]
+Description=DebugLantern daemon
+After=multi-user.target
+ConditionPathExists=/opt/DebugLantern/debuglanternd
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/DebugLantern
+ExecStart=/opt/DebugLantern/debuglanternd --port 4444 --web-port 80
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

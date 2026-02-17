@@ -1,0 +1,2 @@
+disable openautocore.service
+disable openautoflutter.service

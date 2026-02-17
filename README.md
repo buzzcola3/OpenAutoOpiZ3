@@ -40,6 +40,9 @@ Packages added on top of the default Buildroot configuration:
 | DejaVu fonts | Buildroot | `/usr/share/fonts/` | Default font family |
 | systemd | Buildroot | `/usr/lib/systemd/` | Init system, libudev, libsystemd |
 | libc++ / libc++abi / libunwind | Rootfs overlay (LLVM 18, aarch64) | `/usr/lib/` | LLVM C++ runtime (required by OpenAutoFlutter plugin) |
+| tar | Buildroot | `/bin/tar` | Archive utility |
+| gzip | Buildroot | `/bin/gzip` | Compression utility |
+| Dropbear | Buildroot | `/usr/sbin/dropbear` | Lightweight SSH server (dev only, root password: `root`) |
 
 ## Usage
 
@@ -64,6 +67,16 @@ echo 0 > /sys/class/vtconsole/vtcon1/bind 2>/dev/null
 ## Debug / Development Notes
 
 > Items in this section are for development convenience and should be reverted before a release build.
+
+### SSH Access (Dropbear)
+
+Dropbear SSH server is enabled for development. Root password is `root`.
+
+```bash
+ssh root@<board-ip>
+```
+
+**To revert for release:** remove `BR2_PACKAGE_DROPBEAR=y` and `BR2_TARGET_GENERIC_ROOT_PASSWD="root"` from the defconfig.
 
 ### Verbose UART Boot Logging
 

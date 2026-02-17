@@ -1,4 +1,5 @@
 menu "OpenAuto external options"
 	source "$BR2_EXTERNAL_OPENAUTO_PATH/package/openautocore/Config.in"
 	source "$BR2_EXTERNAL_OPENAUTO_PATH/package/openautoflutter/Config.in"
+	source "$BR2_EXTERNAL_OPENAUTO_PATH/package/debuglantern/Config.in"
 endmenu

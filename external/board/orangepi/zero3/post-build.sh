@@ -34,9 +34,12 @@ sed -e "$(generic_getty)" \
 
 sed "s/%PARTUUID%/${PARTUUID}/g" "${SCRIPT_DIR}/genimage.cfg" > "${BINARIES_DIR}/genimage.cfg"
 
-# Enable OpenAutoCore and OpenAutoFlutter at boot
 mkdir -p "${TARGET_DIR}/etc/systemd/system/multi-user.target.wants"
-ln -sf /etc/systemd/system/openautocore.service \
-  "${TARGET_DIR}/etc/systemd/system/multi-user.target.wants/openautocore.service"
-ln -sf /etc/systemd/system/openautoflutter.service \
-  "${TARGET_DIR}/etc/systemd/system/multi-user.target.wants/openautoflutter.service"
+rm -f "${TARGET_DIR}/etc/systemd/system/multi-user.target.wants/openautocore.service"
+rm -f "${TARGET_DIR}/etc/systemd/system/multi-user.target.wants/openautoflutter.service"
+ln -sf /usr/lib/systemd/system/systemd-networkd.service \
+  "${TARGET_DIR}/etc/systemd/system/multi-user.target.wants/systemd-networkd.service"
+ln -sf /usr/lib/systemd/system/avahi-daemon.service \
+  "${TARGET_DIR}/etc/systemd/system/multi-user.target.wants/avahi-daemon.service"
+ln -sf /etc/systemd/system/debuglantern.service \
+  "${TARGET_DIR}/etc/systemd/system/multi-user.target.wants/debuglantern.service"
