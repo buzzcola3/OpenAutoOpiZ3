@@ -101,4 +101,8 @@ The defconfig enables full debug symbols and disables binary stripping so that G
 
 A GDB server (`gdbserver`) is also included on the target (`BR2_PACKAGE_GDB_SERVER=y`).
 
-**To revert for release:** remove `BR2_ENABLE_DEBUG=y`, `BR2_DEBUG_3=y`, and `# BR2_STRIP_strip is not set` from the defconfig (default Buildroot behaviour will strip binaries automatically).
+The rootfs size is increased to 6 GB (`BR2_TARGET_ROOTFS_EXT2_SIZE="6G"`) to accommodate the larger unstripped binaries.
+
+**LLVM/Clang/SPIRV stripping:** the `post-build.sh` script selectively strips debug symbols from `libLLVM*.so*`, `libclang*.so*`, and `libSPIRV*.so*` because these libraries exceed the 2 GB single-file limit of `mkfs.ext4 -d` (e2fsprogs populate mode). All other libraries — including `libgallium` (Mesa/Panfrost) — retain full debug symbols.
+
+**To revert for release:** remove `BR2_ENABLE_DEBUG=y`, `BR2_DEBUG_3=y`, and `# BR2_STRIP_strip is not set` from the defconfig, reset `BR2_TARGET_ROOTFS_EXT2_SIZE` to `"1G"`, and remove the LLVM/Clang/SPIRV stripping block from `post-build.sh`.
