@@ -1,0 +1,52 @@
+--- a/src/gallium/drivers/panfrost/pan_resource.c
++++ b/src/gallium/drivers/panfrost/pan_resource.c
+@@ -2381,17 +2381,39 @@
+                panfrost_resource_setup(screen, prsrc, DRM_FORMAT_MOD_LINEAR,
+                                        prsrc->image.props.format, 0);
+ 
+-               /* converting the resource from tiled to linear and back
+-                * shouldn't increase memory usage...
+-                */
+-               assert(prsrc->plane.layout.data_size_B <= panfrost_bo_size(bo));
++               uint32_t required_size = prsrc->plane.layout.data_size_B;
++               uint32_t current_size = panfrost_bo_size(bo);
+ 
+-               util_copy_rect(
+-                  bo->ptr.cpu + prsrc->plane.layout.slices[0].offset_B,
+-                  prsrc->base.format,
+-                  prsrc->plane.layout.slices[0].tiled_or_linear.row_stride_B, 0,
+-                  0, transfer->box.width, transfer->box.height, trans->map,
+-                  transfer->stride, 0, 0);
++               if (required_size > current_size) {
++                  uint32_t flags = bo->flags & ~PAN_BO_DELAY_MMAP;
++                  struct panfrost_bo *newbo = NULL;
++
++                  if (!(bo->flags & PAN_BO_SHARED)) {
++                     newbo =
++                        panfrost_bo_create(dev, required_size, flags, bo->label);
++                  }
++
++                  if (newbo) {
++                     panfrost_bo_unreference(prsrc->bo);
++                     prsrc->bo = newbo;
++                     prsrc->plane.base = newbo->ptr.gpu;
++                     bo = newbo;
++                  } else {
++                     panfrost_resource_setup(
++                        screen, prsrc, DRM_FORMAT_MOD_ARM_16X16_BLOCK_U_INTERLEAVED,
++                        prsrc->image.props.format, 0);
++                     panfrost_store_tiled_images(trans, prsrc);
++                  }
++               }
++
++               if (prsrc->modifier == DRM_FORMAT_MOD_LINEAR) {
++                  util_copy_rect(
++                     bo->ptr.cpu + prsrc->plane.layout.slices[0].offset_B,
++                     prsrc->base.format,
++                     prsrc->plane.layout.slices[0].tiled_or_linear.row_stride_B, 0,
++                     0, transfer->box.width, transfer->box.height, trans->map,
++                     transfer->stride, 0, 0);
++               }
+             } else {
+                panfrost_store_tiled_images(trans, prsrc);
+             }
