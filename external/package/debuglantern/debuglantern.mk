@@ -2,7 +2,7 @@
 # debuglantern
 ################################################################################
 
-DEBUGLANTERN_VERSION = 0.0.6
+DEBUGLANTERN_VERSION = 0.0.7
 DEBUGLANTERN_SOURCE = debuglantern-linux-arm64-gnu.tar.gz
 DEBUGLANTERN_SITE = https://github.com/buzzcola3/DebugLantern/releases/download/v$(DEBUGLANTERN_VERSION)
 DEBUGLANTERN_SITE_METHOD = wget
