@@ -1,0 +1,252 @@
+#!/bin/sh
+# sysmon.sh — lightweight CPU / GPU / RAM / thermal monitor for Orange Pi Zero3
+# (Allwinner H618, Mali G31 MP2)
+#
+# Usage:
+#   sysmon              # one-shot snapshot
+#   sysmon -w [SEC]     # continuous watch mode (default 2 s)
+#   sysmon -j           # one-shot JSON output (for piping / logging)
+#   sysmon -c [FILE]    # continuous CSV logging to FILE (default stdout)
+#
+# No external dependencies — only /proc and /sys.
+
+set -e
+
+# ── Paths (Allwinner H618 / Panfrost) ─────────────────────────────────────────
+GPU_DEVFREQ="/sys/class/devfreq/1800000.gpu"         # Mali G31 devfreq
+GPU_UTIL_FILE="/sys/kernel/debug/dri/0/gpu_usage"    # debugfs (if available)
+THERMAL_CPU="/sys/class/thermal/thermal_zone0/temp"   # CPU thermal zone
+THERMAL_GPU="/sys/class/thermal/thermal_zone1/temp"   # GPU thermal zone (if split)
+
+# ── Helpers ────────────────────────────────────────────────────────────────────
+
+read_or_na() {
+    cat "$1" 2>/dev/null || echo "n/a"
+}
+
+# ── CPU usage (all cores, from /proc/stat) ─────────────────────────────────────
+
+read_cpu_fields() {
+    awk '/^cpu / {print $2,$3,$4,$5,$6,$7,$8,$9}' /proc/stat
+}
+
+calc_cpu_pct() {
+    local delay="${1:-1}"
+    read -r u1 n1 s1 i1 w1 q1 sq1 st1 <<EOF
+$(read_cpu_fields)
+EOF
+    sleep "$delay"
+    read -r u2 n2 s2 i2 w2 q2 sq2 st2 <<EOF
+$(read_cpu_fields)
+EOF
+    local total1=$((u1+n1+s1+i1+w1+q1+sq1+st1))
+    local total2=$((u2+n2+s2+i2+w2+q2+sq2+st2))
+    local idle1=$((i1+w1))
+    local idle2=$((i2+w2))
+    local dt=$((total2-total1))
+    local di=$((idle2-idle1))
+    if [ "$dt" -eq 0 ]; then
+        echo 0
+    else
+        echo $(( (dt - di) * 100 / dt ))
+    fi
+}
+
+read_cpu_freqs() {
+    for f in /sys/devices/system/cpu/cpu[0-9]*/cpufreq/scaling_cur_freq; do
+        [ -f "$f" ] && awk '{printf "%d ", $1/1000}' "$f"
+    done
+    echo
+}
+
+# ── GPU stats ──────────────────────────────────────────────────────────────────
+
+read_gpu_freq() {
+    local raw
+    raw=$(read_or_na "${GPU_DEVFREQ}/cur_freq")
+    if [ "$raw" = "n/a" ]; then
+        for d in /sys/class/devfreq/*gpu*; do
+            [ -f "$d/cur_freq" ] && { raw=$(cat "$d/cur_freq"); break; }
+        done
+    fi
+    if [ "$raw" = "n/a" ] || [ -z "$raw" ]; then
+        echo "n/a"
+    else
+        echo $((raw / 1000000))
+    fi
+}
+
+read_gpu_load() {
+    if [ -f "${GPU_DEVFREQ}/load" ]; then
+        awk -F'[@/ ]' '{print $1}' "${GPU_DEVFREQ}/load" 2>/dev/null && return
+    fi
+    if [ -f "$GPU_UTIL_FILE" ]; then
+        cat "$GPU_UTIL_FILE" 2>/dev/null && return
+    fi
+    echo "n/a"
+}
+
+# ── RAM ────────────────────────────────────────────────────────────────────────
+
+read_ram() {
+    awk '
+        /^MemTotal:/   {total=$2}
+        /^MemFree:/    {free=$2}
+        /^MemAvailable:/ {avail=$2}
+        /^Buffers:/    {buf=$2}
+        /^Cached:/     {cached=$2}
+        END {
+            used = total - avail
+            printf "%d %d %d %d %d", total, used, free, buf, cached
+        }
+    ' /proc/meminfo
+}
+
+# ── Temperatures ───────────────────────────────────────────────────────────────
+
+read_temp() {
+    local raw
+    raw=$(read_or_na "$1")
+    if [ "$raw" = "n/a" ]; then
+        echo "n/a"
+    else
+        echo "$raw" | awk '{printf "%.1f", $1/1000}'
+    fi
+}
+
+# ── Output formatters ─────────────────────────────────────────────────────────
+
+human_output() {
+    local cpu_pct="$1" cpu_freqs="$2" gpu_freq="$3" gpu_load="$4"
+    local ram_total ram_used ram_free ram_buf ram_cached
+    read -r ram_total ram_used ram_free ram_buf ram_cached <<EOF
+$(read_ram)
+EOF
+    local cpu_temp gpu_temp
+    cpu_temp=$(read_temp "$THERMAL_CPU")
+    gpu_temp=$(read_temp "$THERMAL_GPU")
+
+    printf "\033[2J\033[H"
+    echo "═══════════════════════════════════════════════════"
+    echo "  OpenAuto · Orange Pi Zero3  System Monitor"
+    echo "═══════════════════════════════════════════════════"
+    echo ""
+    printf "  CPU usage :  %3s %%\n" "$cpu_pct"
+    printf "  CPU freqs :  %s MHz\n" "$cpu_freqs"
+    printf "  CPU temp  :  %s °C\n" "$cpu_temp"
+    echo ""
+    printf "  GPU freq  :  %s MHz\n" "$gpu_freq"
+    printf "  GPU load  :  %s %%\n" "$gpu_load"
+    [ "$gpu_temp" != "n/a" ] && printf "  GPU temp  :  %s °C\n" "$gpu_temp"
+    echo ""
+    printf "  RAM total :  %d MiB\n" $((ram_total / 1024))
+    printf "  RAM used  :  %d MiB  (%d %%)\n" $((ram_used / 1024)) $((ram_used * 100 / ram_total))
+    printf "  RAM free  :  %d MiB\n" $((ram_free / 1024))
+    printf "  RAM buf/$ :  %d / %d MiB\n" $((ram_buf / 1024)) $((ram_cached / 1024))
+    echo ""
+    echo "═══════════════════════════════════════════════════"
+}
+
+json_output() {
+    local cpu_pct="$1" cpu_freqs="$2" gpu_freq="$3" gpu_load="$4"
+    local ram_total ram_used ram_free ram_buf ram_cached
+    read -r ram_total ram_used ram_free ram_buf ram_cached <<EOF
+$(read_ram)
+EOF
+    local cpu_temp gpu_temp
+    cpu_temp=$(read_temp "$THERMAL_CPU")
+    gpu_temp=$(read_temp "$THERMAL_GPU")
+
+    printf '{"cpu_pct":%s,"cpu_freqs":"%s","cpu_temp":"%s","gpu_freq_mhz":"%s","gpu_load":"%s","gpu_temp":"%s","ram_total_kib":%d,"ram_used_kib":%d,"ram_free_kib":%d}\n' \
+        "$cpu_pct" "$cpu_freqs" "$cpu_temp" "$gpu_freq" "$gpu_load" "$gpu_temp" \
+        "$ram_total" "$ram_used" "$ram_free"
+}
+
+csv_header() {
+    echo "timestamp,cpu_pct,cpu_freqs,cpu_temp,gpu_freq_mhz,gpu_load,gpu_temp,ram_total_kib,ram_used_kib,ram_free_kib"
+}
+
+csv_output() {
+    local cpu_pct="$1" cpu_freqs="$2" gpu_freq="$3" gpu_load="$4"
+    local ram_total ram_used ram_free ram_buf ram_cached
+    read -r ram_total ram_used ram_free ram_buf ram_cached <<EOF
+$(read_ram)
+EOF
+    local cpu_temp gpu_temp
+    cpu_temp=$(read_temp "$THERMAL_CPU")
+    gpu_temp=$(read_temp "$THERMAL_GPU")
+    local ts
+    ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+    printf '%s,%s,%s,%s,%s,%s,%s,%d,%d,%d\n' \
+        "$ts" "$cpu_pct" "$cpu_freqs" "$cpu_temp" "$gpu_freq" "$gpu_load" "$gpu_temp" \
+        "$ram_total" "$ram_used" "$ram_free"
+}
+
+# ── Gather one snapshot ────────────────────────────────────────────────────────
+
+snapshot() {
+    local sample_sec="${1:-1}"
+    CPU_PCT=$(calc_cpu_pct "$sample_sec")
+    CPU_FREQS=$(read_cpu_freqs)
+    GPU_FREQ=$(read_gpu_freq)
+    GPU_LOAD=$(read_gpu_load)
+}
+
+# ── Main ───────────────────────────────────────────────────────────────────────
+
+MODE="human"
+INTERVAL=2
+CSV_FILE=""
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -w|--watch) MODE="watch"; [ -n "$2" ] && [ "$2" != "${2#[0-9]}" ] && { INTERVAL="$2"; shift; }; shift ;;
+        -j|--json)  MODE="json";  shift ;;
+        -c|--csv)   MODE="csv";   [ -n "$2" ] && [ "$2" != "-" ] && { CSV_FILE="$2"; shift; }; shift ;;
+        -h|--help)
+            echo "Usage: sysmon [-w [SEC]] [-j] [-c [FILE]] [-h]"
+            echo "  -w, --watch [SEC]  Continuous TUI refresh (default 2 s)"
+            echo "  -j, --json         One-shot JSON output"
+            echo "  -c, --csv [FILE]   Continuous CSV logging (default: stdout)"
+            echo "  -h, --help         Show this help"
+            exit 0
+            ;;
+        *) echo "Unknown option: $1" >&2; exit 1 ;;
+    esac
+done
+
+case "$MODE" in
+    human)
+        snapshot 1
+        human_output "$CPU_PCT" "$CPU_FREQS" "$GPU_FREQ" "$GPU_LOAD"
+        ;;
+    json)
+        snapshot 1
+        json_output "$CPU_PCT" "$CPU_FREQS" "$GPU_FREQ" "$GPU_LOAD"
+        ;;
+    watch)
+        trap 'printf "\033[?25h"; exit 0' INT TERM
+        printf "\033[?25l"
+        while true; do
+            snapshot "$INTERVAL"
+            human_output "$CPU_PCT" "$CPU_FREQS" "$GPU_FREQ" "$GPU_LOAD"
+        done
+        ;;
+    csv)
+        if [ -n "$CSV_FILE" ]; then
+            csv_header > "$CSV_FILE"
+        else
+            csv_header
+        fi
+        trap 'exit 0' INT TERM
+        while true; do
+            snapshot "$INTERVAL"
+            if [ -n "$CSV_FILE" ]; then
+                csv_output "$CPU_PCT" "$CPU_FREQS" "$GPU_FREQ" "$GPU_LOAD" >> "$CSV_FILE"
+            else
+                csv_output "$CPU_PCT" "$CPU_FREQS" "$GPU_FREQ" "$GPU_LOAD"
+            fi
+        done
+        ;;
+esac

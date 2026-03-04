@@ -106,3 +106,22 @@ The rootfs size is increased to 6 GB (`BR2_TARGET_ROOTFS_EXT2_SIZE="6G"`) to acc
 **LLVM/Clang/SPIRV stripping:** the `post-build.sh` script selectively strips debug symbols from `libLLVM*.so*`, `libclang*.so*`, and `libSPIRV*.so*` because these libraries exceed the 2 GB single-file limit of `mkfs.ext4 -d` (e2fsprogs populate mode). All other libraries — including `libgallium` (Mesa/Panfrost) — retain full debug symbols.
 
 **To revert for release:** remove `BR2_ENABLE_DEBUG=y`, `BR2_DEBUG_3=y`, and `# BR2_STRIP_strip is not set` from the defconfig, reset `BR2_TARGET_ROOTFS_EXT2_SIZE` to `"1G"`, and remove the LLVM/Clang/SPIRV stripping block from `post-build.sh`.
+
+### System Monitor (`sysmon`)
+
+A lightweight shell script (`/usr/bin/sysmon`) is installed on the target for live CPU / GPU / RAM monitoring. It reads directly from `/proc` and `/sys` — no extra packages required.
+
+```bash
+sysmon              # one-shot snapshot
+sysmon -w           # continuous TUI refresh (2 s default)
+sysmon -w 5         # continuous refresh every 5 s
+sysmon -j           # one-shot JSON (pipe to jq, log, etc.)
+sysmon -c stats.csv # continuous CSV logging to file
+```
+
+Metrics reported:
+- **CPU** — aggregate usage %, per-core frequency (MHz), temperature
+- **GPU** — Mali G31 clock frequency (MHz), load % (via devfreq), temperature
+- **RAM** — total / used / free / buffers / cached (MiB)
+
+Source: `scripts/sysmon.sh` (development copy) · `external/rootfs_overlay/usr/bin/sysmon` (target copy)
